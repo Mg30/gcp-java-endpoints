@@ -5,6 +5,12 @@ class PetitionForm {
         this.displayNameValidation = "none"
         this.displayDescriptionValidation = "none"
     }
+    oninit () {
+        if (!token) {
+            alert("Vous devez SIGN IN")
+            m.route.set("/home")
+        }
+    }
     view () {
         return m("div.container", [
             m("div.row justify-content-center"), [
@@ -30,7 +36,7 @@ class PetitionForm {
                                 }
                             }),
                             m("div.invalid-feedback", { style: `display:${this.displayDescriptionValidation}` }, "Description obligatoire")
-                    
+
                         ]),
                         m("button.btn btn-primary", {
                             onclick: (e) => {
@@ -47,8 +53,8 @@ class PetitionForm {
                                     m.request(
                                         {
                                             method: "POST",
-                                            url: "https://tinypetition-dot-devcloud.appspot.com/_ah/api/petapi/v1/addPetition/",
-                                            data: { name: this.name, description: this.description }
+                                            url: `${endpoint}addPetition/?access_token=${token}`,
+                                            data: { name: this.name, description: this.description, owner: user.getEmail() }
                                         }
 
                                     ).then((result) => {
@@ -56,6 +62,7 @@ class PetitionForm {
                                         m.route.set('/home')
                                     }
                                     )
+                                        .catch(err => console.log(err))
 
                                 }
 
@@ -74,4 +81,85 @@ class PetitionForm {
 
     }
 
+}
+class Petition {
+    constructor(vnode) {
+        this.petition = vnode.attrs.data
+        this.btnDisplay = 'block'
+        this.class = "p.text-center"
+    }
+    view () {
+        return m("li.list-group-item", [
+            m('div.container'), [
+                m('div.row', [
+                    m('div.col', [
+                        m('div', `${this.petition.name}`)
+                    ]),
+                    m('div.col', [
+                        m(this.class, `${this.petition.description}`)
+                    ]),
+                    m('div.col', [
+                        m(this.class, `Signatures : ${this.petition.total}`)
+                    ]),
+                    m('div.col', [
+                        m("button.btn btn-primary", {
+                            style: `display:${this.btnDisplay}`,
+                            onclick: () => {
+                                if (!token) {
+                                    alert("Vous devez SIGN IN")
+                                }
+                                else {
+
+                                    m.request(
+                                        {
+                                            method: "POST",
+                                            url: `${endpoint}signPetition/?access_token=${token}`,
+                                            data: { petitionName: this.petition.name, userName: user.getEmail() }
+                                        })
+                                        .then(
+                                            () => {
+                                                alert("Petition signée ! Merci d'avoir participé")
+                                                this.btnDisplay = "none"
+                                            }
+                                        )
+                                        .catch(
+                                            () => {
+                                                alert("Vous avez déjà signé !")
+                                            }
+                                        )
+
+                                }
+
+                            }
+                        }
+                            ,
+                            "Signer"
+                        )
+                    ])
+
+                ])
+            ]
+        ])
+    }
+}
+
+class PetitionList {
+    constructor(vnode) {
+        this.petitions = []
+    }
+    oninit () {
+        m.request({
+            method: "GET",
+            url: `${endpoint}entitycollection`,
+        })
+            .then(response => {
+                this.petitions = response.items
+                console.log(response)
+            })
+    }
+    view () {
+        return m("ul.list-group", this.petitions.map(petition => {
+            return m(Petition, { data: petition.properties })
+        }))
+    }
 }

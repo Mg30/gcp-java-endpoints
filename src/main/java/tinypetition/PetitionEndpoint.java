@@ -5,8 +5,12 @@ import java.util.Map;
 
 import tinypetition.Payload;
 import tinypetition.Petition;
+import tinypetition.ResponseSign;
+
+import com.google.api.client.util.Throwables;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
+import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
@@ -18,6 +22,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.users.User;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Query.FilterOperator;
@@ -32,8 +37,15 @@ namespace = @ApiNamespace(ownerDomain = "helloworld.example.com",
 public class PetitionEndpoint {
 	
 	@ApiMethod(name = "addPetition",
-			httpMethod = ApiMethod.HttpMethod.POST)
-	public Entity addPetition(Petition incomepetition) {
+			httpMethod = ApiMethod.HttpMethod.POST,
+			audiences = {"CLIENT ID"},
+			clientIds = {"CLIENT ID"}
+			
+			)
+	public Entity addPetition(User user, Petition incomepetition)  throws UnauthorizedException{
+		  if (user == null) {
+		      throw new UnauthorizedException("Invalid credentials");
+		    }
 		String uuid = UUID.randomUUID().toString();
 		uuid.replace("-", "");
 		Entity petition = new Entity("Petition",incomepetition.name);
@@ -54,7 +66,9 @@ public class PetitionEndpoint {
 	}
 	
 	@ApiMethod(name ="getPetition",
-			httpMethod = ApiMethod.HttpMethod.POST
+			httpMethod = ApiMethod.HttpMethod.POST,
+			audiences = {"CLIENT ID"},
+			clientIds = {"CLIENT ID"}
 			)
 	public Entity getPetition(Petition inPetition) throws EntityNotFoundException {
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -66,7 +80,7 @@ public class PetitionEndpoint {
 	@ApiMethod(name ="signPetition",
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
-	public void signPetition(Payload payload) throws EntityNotFoundException {
+	public void signPetition(Payload payload) throws EntityNotFoundException, UnauthorizedException {
 		Key petitionKey = KeyFactory.createKey("Petition", payload.petitionName);
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Filter propertyFilter = new FilterPredicate("signataires", FilterOperator.EQUAL, payload.userName);
@@ -90,13 +104,15 @@ public class PetitionEndpoint {
 					petitionIndex = new Entity("PetitionIndex",uuid,petition.getKey());
 					ArrayList<String> signataires = new ArrayList<String>();
 					signataires.add(payload.userName);
-					petitionIndex.setProperty("nb",0);
+					petitionIndex.setProperty("nb",1);
 				}
 				else {
-					 @SuppressWarnings("unchecked")
-					  ArrayList<String> retrievedSignataires = (ArrayList<String>) petitionIndex.getProperty("signataires");
-					  retrievedSignataires.add(payload.userName);
-					  petitionIndex.setProperty("signataires", retrievedSignataires);
+					nb++;
+					@SuppressWarnings("unchecked")
+					ArrayList<String> retrievedSignataires = (ArrayList<String>) petitionIndex.getProperty("signataires");
+					retrievedSignataires.add(payload.userName);
+					petitionIndex.setProperty("signataires", retrievedSignataires);
+					petitionIndex.setProperty("nb", nb);
 				}
 				datastore.put(txn,petition);
 				datastore.put(txn, petitionIndex);
@@ -106,6 +122,10 @@ public class PetitionEndpoint {
 			    txn.rollback();
 			  }
 			}
+			
+		}
+		else {
+			throw new UnauthorizedException("user already signed");
 			
 		}
 

@@ -1,30 +1,51 @@
 class Navbar {
     constructor(vnode) {
+        this.displaySignIn = "block"
+        this.displaySignOut = "none"
     }
     view () {
         return m("nav.navbar navbar-dark bg-dark", [
             m("a.navbar-brand text-white [href=/home]", { oncreate: m.route.link }, "Home"),
-            m("ul.navbar-nav mr-auto",[
-                m("li.nav-item dropdown",[
+            m("ul.navbar-nav mr-auto", [
+                m("li.nav-item dropdown", [
                     m("a.nav-link dropdown-toggle[href= #][role=button][data-toggle=dropdown][aria-haspopup=true][aria-expanded=false][id=navbarDropdown]",
-                    "Menu"
+                        "Menu"
                     ),
-                    m("div.dropdown-menu[aria-labelledby=navbarDropdown]",[
-                        m("a.dropdown-item[href=/add]",{ oncreate: m.route.link }, "Ajouter")
-                    ]) 
+                    m("div.dropdown-menu[aria-labelledby=navbarDropdown]", [
+                        m("a.dropdown-item[href=/add]", { oncreate: m.route.link }, "Ajouter")
+                    ])
                 ])
-            ])
+            ]),
+            m("button.btn btn-outline-success my-2 my-sm-0", {
+                style: `display:${this.displaySignIn}`, onclick: () => {
+                    gapi.auth2.getAuthInstance().signIn()
+                        .then(() => {
+                            this.displaySignIn = "none"
+                            user = gapi.auth2.getAuthInstance().currentUser.get()
+                            token = user.getAuthResponse().id_token;
+                            user = user.getBasicProfile()
+                            this.displaySignOut = "block"
+                            m.redraw()
+                        })
+                        .catch(err => console.log(err))
+
+                }
+            }, "SIGN IN"),
+            m("button.btn btn-outline-danger", {
+                style: `display:${this.displaySignOut}`, onclick: () => {
+                    gapi.auth2.getAuthInstance().signOut()
+                        .then(() => {
+                            this.displaySignIn = "block"
+                            this.displaySignOut = "none"
+                            user = null
+                            token = ''
+                            m.redraw()
+                        })
+                        .catch(err => console.log(err))
+
+                }
+            }, "SIGN OUT"),
+            
         ])
-    }
-}
-
-
-class Footer{
-    constructor(vnode){
-
-    }
-    view(){
-        return m("footer.footer",[
-            m("nav.navbar navbar-dark bg-dark")])
     }
 }

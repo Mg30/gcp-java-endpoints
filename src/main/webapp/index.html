@@ -2,6 +2,30 @@
 <html lang="en">
 
 <head>
+    <script>
+        var gapi = gapi || {};
+
+        /* eslint-disable no-unused-vars */
+
+        // [START load_auth2_library]
+        function loadAuthClient() {
+            gapi.load('auth2', initGoogleAuth);
+        }
+        // [END load_auth2_library]
+
+        // [START init_google_auth]
+        function initGoogleAuth(clientId = 'CLIENT ID') {
+            gapi.auth2.init({
+                client_id: clientId,
+            })
+                .then(console.log(gapi))
+                .catch(err => {
+                    console.log(err);
+                });
+        }
+
+    </script>
+    <script src="https://apis.google.com/js/platform.js?onload=loadAuthClient" async defer></script>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -24,17 +48,22 @@
     <script src="/javascript/Layout.js"></script>
     <script src="/javascript/Petition.js"></script>
     <script>
+        // GLOBAL SCOPE VARIABLE 
+        var user = {}
+        var token = ''
+        var endpoint = "https://tinypetition-dot-devcloud.appspot.com/_ah/api/petapi/v1/"
 
         m.route(document.body, "/home", {
             "/home": {
                 render: () => {
                     return m('div', [
                         m(Navbar),
+                        m(PetitionList)
                     ])
                 }
             },
             "/add": {
-                render: (vnode) => {
+                render: () => {
                     return m('div', [
                         m(Navbar),
                         m(PetitionForm),
