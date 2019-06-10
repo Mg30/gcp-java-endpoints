@@ -14,7 +14,7 @@
         // [END load_auth2_library]
 
         // [START init_google_auth]
-        function initGoogleAuth(clientId = 'CLIENT ID') {
+        function initGoogleAuth(clientId = '291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com') {
             gapi.auth2.init({
                 client_id: clientId,
             })
@@ -46,27 +46,34 @@
         crossorigin="anonymous"></script>
     <script src="https://unpkg.com/mithril/mithril.js"></script>
     <script src="/javascript/Layout.js"></script>
+    <script src="/javascript/Components.js"></script>
     <script src="/javascript/Petition.js"></script>
     <script>
         // GLOBAL SCOPE VARIABLE 
-        var user = {}
-        var token = ''
         var endpoint = "https://tinypetition-dot-devcloud.appspot.com/_ah/api/petapi/v1/"
 
         m.route(document.body, "/home", {
             "/home": {
-                render: () => {
+                view: () => {
                     return m('div', [
                         m(Navbar),
-                        m(PetitionList)
+                        m(PetitionList,{route:"entitycollection",auth:false,method:"GET"})
                     ])
                 }
             },
             "/add": {
-                render: () => {
+                view: () => {
                     return m('div', [
                         m(Navbar),
                         m(PetitionForm),
+                    ])
+                }
+            },
+            "/myPetition":{
+                view:()=>{
+                    return m("div",[
+                    m(Navbar),
+                    m(PetitionList,{route:"entitycollection/",method:"POST",auth:true})
                     ])
                 }
             }

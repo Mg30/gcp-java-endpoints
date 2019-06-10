@@ -3,6 +3,13 @@ class Navbar {
         this.displaySignIn = "block"
         this.displaySignOut = "none"
     }
+    onupdate(){
+        if(sessionStorage.getItem('token')){
+            this.displaySignIn = "none"
+            this.displaySignOut = "block"
+        }
+        m.redraw()
+    }
     view () {
         return m("nav.navbar navbar-dark bg-dark", [
             m("a.navbar-brand text-white [href=/home]", { oncreate: m.route.link }, "Home"),
@@ -12,7 +19,9 @@ class Navbar {
                         "Menu"
                     ),
                     m("div.dropdown-menu[aria-labelledby=navbarDropdown]", [
-                        m("a.dropdown-item[href=/add]", { oncreate: m.route.link }, "Ajouter")
+                        m("a.dropdown-item[href=/add]", { oncreate: m.route.link }, "Ajouter"),
+                        m("a.dropdown-item[href=/myPetition]", { oncreate: m.route.link }, "mes pétitions")
+
                     ])
                 ])
             ]),
@@ -21,11 +30,10 @@ class Navbar {
                     gapi.auth2.getAuthInstance().signIn()
                         .then(() => {
                             this.displaySignIn = "none"
-                            user = gapi.auth2.getAuthInstance().currentUser.get()
-                            token = user.getAuthResponse().id_token;
-                            user = user.getBasicProfile()
+                            let user = gapi.auth2.getAuthInstance().currentUser.get()
+                            sessionStorage.setItem('user',user.getBasicProfile().getEmail())
+                            sessionStorage.setItem('token',user.getAuthResponse().id_token)
                             this.displaySignOut = "block"
-                            m.redraw()
                         })
                         .catch(err => console.log(err))
 
@@ -37,9 +45,8 @@ class Navbar {
                         .then(() => {
                             this.displaySignIn = "block"
                             this.displaySignOut = "none"
-                            user = null
-                            token = ''
-                            m.redraw()
+                            sessionStorage.removeItem('user')
+                            sessionStorage.removeItem('token')
                         })
                         .catch(err => console.log(err))
 

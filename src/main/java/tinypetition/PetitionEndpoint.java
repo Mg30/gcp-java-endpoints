@@ -38,8 +38,8 @@ public class PetitionEndpoint {
 	
 	@ApiMethod(name = "addPetition",
 			httpMethod = ApiMethod.HttpMethod.POST,
-			audiences = {"CLIENT ID"},
-			clientIds = {"CLIENT ID"}
+			audiences = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"},//ICI
+			clientIds = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}
 			
 			)
 	public Entity addPetition(User user, Petition incomepetition)  throws UnauthorizedException{
@@ -47,7 +47,6 @@ public class PetitionEndpoint {
 		      throw new UnauthorizedException("Invalid credentials");
 		    }
 		String uuid = UUID.randomUUID().toString();
-		uuid.replace("-", "");
 		Entity petition = new Entity("Petition",incomepetition.name);
 		petition.setProperty("name", incomepetition.name);
 		petition.setProperty("owner",incomepetition.owner);
@@ -67,8 +66,8 @@ public class PetitionEndpoint {
 	
 	@ApiMethod(name ="getPetition",
 			httpMethod = ApiMethod.HttpMethod.POST,
-			audiences = {"CLIENT ID"},
-			clientIds = {"CLIENT ID"}
+			audiences = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}, //ICI
+			clientIds = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}
 			)
 	public Entity getPetition(Petition inPetition) throws EntityNotFoundException {
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -97,9 +96,8 @@ public class PetitionEndpoint {
 				Key petitionIndexKey = KeyFactory.createKey(petitionKey,"PetitionIndex", currentIndex);
 				Entity petitionIndex = datastore.get(petitionIndexKey);
 				long nb = (long)petitionIndex.getProperty("nb");
-				if(nb==4999) {
+				if(nb==20000) {
 					String uuid = UUID.randomUUID().toString();
-					uuid.replace("-", "");
 					petition.setProperty("currentIndex", uuid);
 					petitionIndex = new Entity("PetitionIndex",uuid,petition.getKey());
 					ArrayList<String> signataires = new ArrayList<String>();
