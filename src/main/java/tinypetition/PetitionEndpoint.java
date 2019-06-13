@@ -6,6 +6,7 @@ import java.util.Map;
 import tinypetition.Payload;
 import tinypetition.Petition;
 import tinypetition.ResponseSign;
+import tinypetition.PaginatedPayload;
 
 import com.google.api.client.util.Throwables;
 import com.google.api.server.spi.config.Api;
@@ -37,6 +38,7 @@ namespace = @ApiNamespace(ownerDomain = "helloworld.example.com",
 public class PetitionEndpoint {
 	
 	@ApiMethod(name = "addPetition",
+			path="add",
 			httpMethod = ApiMethod.HttpMethod.POST,
 			audiences = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"},//ICI
 			clientIds = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}
@@ -77,9 +79,11 @@ public class PetitionEndpoint {
 	}
 	
 	@ApiMethod(name ="signPetition",
+			path="sign",
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
-	public void signPetition(Payload payload) throws EntityNotFoundException, UnauthorizedException {
+	public Entity signPetition(Payload payload) throws EntityNotFoundException, UnauthorizedException {
+		Entity petition;
 		Key petitionKey = KeyFactory.createKey("Petition", payload.petitionName);
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Filter propertyFilter = new FilterPredicate("signataires", FilterOperator.EQUAL, payload.userName);
@@ -88,7 +92,7 @@ public class PetitionEndpoint {
 		if(results.isEmpty()) {
 			Transaction txn = datastore.beginTransaction();
 			try {
-				Entity petition = datastore.get(petitionKey);
+				petition = datastore.get(petitionKey);
 				long total = (long)petition.getProperty("total");
 				total ++;
 				petition.setProperty("total", total);
@@ -126,11 +130,11 @@ public class PetitionEndpoint {
 			throw new UnauthorizedException("user already signed");
 			
 		}
-
-		
+		return petition;
 	}
 	
 	@ApiMethod(name ="getListByUserName",
+			path="ListByUserName",
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
 	public List<Entity> getListByUserName(Payload payload){
@@ -153,6 +157,7 @@ public class PetitionEndpoint {
 	}
 	
 	@ApiMethod(name ="getTop100",
+			path="top100",
 			httpMethod = ApiMethod.HttpMethod.GET
 			)
 	public List<Entity> getTop100(){
@@ -162,7 +167,28 @@ public class PetitionEndpoint {
 		return results;
 		
 	}
+	@ApiMethod(name ="allPetition",
+			path="all",
+			httpMethod = ApiMethod.HttpMethod.POST
+			)
 	
+	public PaginatedPayload allPetition(PaginatedPayload params){
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+		Query q;
+		if(params.lastKey.length() == 0) {
+			q = new Query("Petition").addSort("total", SortDirection.DESCENDING);
+			
+		}
+		else {
+			Key petitionKey = KeyFactory.createKey("Petition", params.lastKey);
+			Filter keyFilter =
+				    new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, FilterOperator.GREATER_THAN, petitionKey);
+			q = new Query("Petition").setFilter(keyFilter);
+	
+		}
+		params.petitions = datastore.prepare(q).asList(FetchOptions.Builder.withLimit(100));
+		return params;
+	}
 	
 }
 

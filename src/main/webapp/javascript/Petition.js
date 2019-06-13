@@ -10,14 +10,8 @@ class PetitionForm {
     }
     oninit () {
         if (!sessionStorage.getItem('token')) {
-            alert("Vous devez SIGN IN")
             m.route.set("/home")
-        }
-    }
-    onupdate () {
-        if (!sessionStorage.getItem('token')) {
-            m.route.set('/home')
-            alert("Non identifé")
+            alert("Vous devez SIGN IN")
         }
     }
     view () {
@@ -63,7 +57,7 @@ class PetitionForm {
                                     m.request(
                                         {
                                             method: "POST",
-                                            url: `${endpoint}addPetition/?access_token=${sessionStorage.getItem('token')}`,
+                                            url: `${endpoint}add/?access_token=${sessionStorage.getItem('token')}`,
                                             data: { name: this.name, description: this.description, owner: sessionStorage.getItem('user') }
                                         }
 
@@ -101,11 +95,14 @@ class PetitionForm {
 class Petition {
     constructor(vnode) {
         this.petition = vnode.attrs.data
-        this.btnDisplay = 'block'
+        this.btnDisplay = vnode.attrs.display
         this.class = "p.text-center"
         this.header = ""
         this.body = ""
-        this.id = "modalId"
+        this.id = `${this.petition.name}`
+    }
+    onupdate (vnode){
+        this.petition = vnode.attrs.data
     }
     view () {
         return m('div.container mb-5', [
@@ -130,14 +127,16 @@ class Petition {
                                 m.request(
                                     {
                                         method: "POST",
-                                        url: `${endpoint}signPetition/?access_token=${sessionStorage.getItem('token')}`,
+                                        url: `${endpoint}sign/?access_token=${sessionStorage.getItem('token')}`,
                                         data: { petitionName: this.petition.name, userName: sessionStorage.getItem('user') }
                                     })
                                     .then(
-                                        () => {
+                                        response => {
                                             this.header = "Petition signée"
                                             this.body = "Merci d'avoir participé"
+                                            this.petition = response.properties
                                             this.btnDisplay = "none"
+                                            console.log(response)
                                             $(`#${this.id}`).modal('show')
                                         }
                                     )
@@ -164,66 +163,94 @@ class Petition {
 
 class PetitionList {
     constructor(vnode) {
+        this.petitions
+        this.route
+        this.title
+        this.method
+        this.nbpages
+        this.numberperpage = 20
+        this.petitionsSliced = []
+        this.start
+        this.end
+    }
+    oninit (vnode) {
         this.petitions = []
-        this.route = vnode.attrs.route
-        this.auth = vnode.attrs.auth
-        this.method = vnode.attrs.method
         this.title = vnode.attrs.title
-        this.itemsPerPage = vnode.attrs.itemsPerPage
-        this.nbPages = this.petitions.length/this.itemsPerPage
-        this.currentPage = 1
-        this.paginatedPetitions = []
+        this.method = vnode.attrs.method
+        this.route = vnode.attrs.route
+        this.start = 0
+        this.end = this.numberperpage
+        m.request({
+            method: 'GET',
+            url: `${endpoint}${this.route}`
+        })
+            .then(
+                response => {
+                    this.petitions = response.items
+                    this.nbpages = parseInt(this.petitions.length/this.numberperpage)
+                    this.petitionsSliced = this.petitions.slice(this.start, this.end)
+                    console.log("initialisation")
+                }
+            )
     }
-    oninit () {
-        if (this.auth) {
-            if (!sessionStorage.getItem('token')) {
-                m.route.set('/home')
-                alert("Non identifé")
-            }
-        }
-        let req
-        if (this.method === "POST") {
-            req = {
-                method: this.method,
-                url: this.auth === true ? `${endpoint}${this.route}?access_token=${sessionStorage.getItem('token')}` : `${endpoint}${this.route}`,
-                data: { userName: sessionStorage.getItem('user') }
-            }
-
-        }
-        else {
-            req = {
-                method: this.method,
-                url: this.auth === true ? `${endpoint}${this.route}?access_token=${sessionStorage.getItem('token')}` : `${endpoint}${this.route}`
-            }
-
-        }
-        console.log(req)
-
-        m.request(req)
-            .then(response => {
-                console.log(response)
-                this.petitions = response.items
-                let start = this.itemsPerPage
-                let end = start + this.itemsPerPage + 1
-                this.paginatedPetitions = this.petitions.slice(start, end)
-            })
-            .catch(err => console.log(err))
+    onupdate(){
+        this.petitionsSliced = this.petitions.slice(this.start,this.end)
     }
-    onupdate () {
-        if (this.auth) {
-            if (!sessionStorage.getItem('token')) {
-                m.route.set('/home')
-                alert("Non identifé")
-            }
-        }
+    view () {
+        return m("div", [
+            m("h4.mb-5", this.title),
+            m("div", this.petitionsSliced.map(petition => {
+                return m(Petition, { data: petition.properties, display:'block'})
+            })),
+            m("nav[aria-label=...]",[
+                m("ul.pagination",[...Array(6).keys()].slice(1).map(nb=>{
+                    return m("li.page-item",m("a.page-link[href=#]",{
+                        onclick: ()=>{
+                            this.end = nb*this.numberperpage
+                            this.start = (this.end - this.numberperpage)
+                            this.petitionsSliced = this.petitions.slice(this.start,this.end)
+                        }
+                    },nb))
+                }))
+            ])
+        ])
+    }
+}
 
+
+class MyPetition {
+    constructor(vnode) {
+        this.petitions
+        this.route
+        this.title
+    }
+    oninit (vnode) {
+        this.petitions = []
+        this.title = vnode.attrs.title
+        this.method = vnode.attrs.method
+        this.route = vnode.attrs.route
+        if (!sessionStorage.getItem('token')) {
+            m.route.set("/home")
+            alert("Vous devez SIGN IN")
+        }
+        m.request({
+            method: this.method,
+            url: `${endpoint}${this.route}`,
+            data: { userName: sessionStorage.getItem('user') }
+        })
+            .then(
+                response => {
+                    this.petitions = response.items
+                }
+            )
     }
     view () {
         return m("div", [
             m("h4.mb-5", this.title),
             m("div", this.petitions.map(petition => {
-                return m(Petition, { data: petition.properties })
+                return m(Petition, { data: petition.properties, display:'none'})
             })),
         ])
     }
+
 }

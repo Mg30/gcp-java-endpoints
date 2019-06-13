@@ -47,6 +47,7 @@ class Navbar {
                             this.displaySignOut = "none"
                             sessionStorage.removeItem('user')
                             sessionStorage.removeItem('token')
+                            m.route.set('/home')
                         })
                         .catch(err => console.log(err))
 

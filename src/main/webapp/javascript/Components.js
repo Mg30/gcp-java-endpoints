@@ -1,13 +1,14 @@
 class MyModale {
-    constructor() {
-        this.header 
-        this.body 
-        this.id 
+    constructor(vnode) {
+        this.header = vnode.attrs.header
+        this.body = vnode.attrs.body
+        this.id = vnode.attrs.id
     }
     onupdate (vnode) {
         this.header = vnode.attrs.header
         this.body = vnode.attrs.body
         this.id = vnode.attrs.id
+        m.redraw()
     }
     view () {
         return m(`div.modal fade[id=${this.id}][tabindex=-1][role=dialog][aria-labelledby=exampleModalLabel][aria-hidden="true"]`, [
