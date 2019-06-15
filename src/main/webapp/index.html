@@ -54,12 +54,22 @@
 
         m.route(document.body, "/home", {
             "/home": {
-                view: () => {
+                render: () => {
                     return m('div', [
                         m(Navbar),
-                        m(PetitionList,{route:"top100", title: "TOP 100",method:"GET"})
+                        m(PetitionListAll,{route:"all/", title: "WELCOME TO TINYPET' ",method:"POST"})
                     ])
                 }
+            },
+            "/top100":{
+                view:()=>{
+                    return m('div', [
+                        m(Navbar),
+                        m(PetitionList,{route:"top100", title: "TOP 100 DES PETITIONS ",method:"GET"})
+                    ])
+
+                }
+
             },
             "/add": {
                 view: () => {

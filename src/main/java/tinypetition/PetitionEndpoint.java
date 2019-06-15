@@ -176,17 +176,17 @@ public class PetitionEndpoint {
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Query q;
 		if(params.lastKey.length() == 0) {
-			q = new Query("Petition").addSort("total", SortDirection.DESCENDING);
+			q = new Query("Petition");
 			
 		}
 		else {
 			Key petitionKey = KeyFactory.createKey("Petition", params.lastKey);
-			Filter keyFilter =
-				    new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, FilterOperator.GREATER_THAN, petitionKey);
+			Filter keyFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, FilterOperator.GREATER_THAN, petitionKey);
+				
 			q = new Query("Petition").setFilter(keyFilter);
 	
 		}
-		params.petitions = datastore.prepare(q).asList(FetchOptions.Builder.withLimit(100));
+		params.petitions = datastore.prepare(q).asList(FetchOptions.Builder.withLimit(10));
 		return params;
 	}
 	

@@ -4,13 +4,10 @@ class MyModale {
         this.body = vnode.attrs.body
         this.id = vnode.attrs.id
     }
-    onupdate (vnode) {
+    view (vnode) {
         this.header = vnode.attrs.header
         this.body = vnode.attrs.body
         this.id = vnode.attrs.id
-        m.redraw()
-    }
-    view () {
         return m(`div.modal fade[id=${this.id}][tabindex=-1][role=dialog][aria-labelledby=exampleModalLabel][aria-hidden="true"]`, [
             m("div.modal-dialog[role=document]", [
                 m("div.modal-content", [

@@ -94,17 +94,19 @@ class PetitionForm {
 }
 class Petition {
     constructor(vnode) {
-        this.petition = vnode.attrs.data
+        this.petition
         this.btnDisplay = vnode.attrs.display
         this.class = "p.text-center"
         this.header = ""
         this.body = ""
-        this.id = `${this.petition.name}`
+        this.id
+        this.total = 0
+        this.parent 
     }
-    onupdate (vnode){
+    view (vnode) {
+        this.parent = vnode.attrs.maj
         this.petition = vnode.attrs.data
-    }
-    view () {
+        this.id = `${this.petition.name}`
         return m('div.container mb-5', [
             m(MyModale, { id: this.id, header: this.header, body: this.body, }),
             m("div.card", [
@@ -132,11 +134,12 @@ class Petition {
                                     })
                                     .then(
                                         response => {
+                                            let pos
                                             this.header = "Petition signée"
                                             this.body = "Merci d'avoir participé"
-                                            this.petition = response.properties
+                                            pos = this.parent.petitions.map(pet=>pet.name).indexOf(response.properties.name)
+                                            this.parent.petitions[pos].total = response.properties.total
                                             this.btnDisplay = "none"
-                                            console.log(response)
                                             $(`#${this.id}`).modal('show')
                                         }
                                     )
@@ -167,50 +170,46 @@ class PetitionList {
         this.route
         this.title
         this.method
-        this.nbpages
+        this.nbpages = 0
         this.numberperpage = 20
         this.petitionsSliced = []
         this.start
         this.end
+        this.petitions = []
     }
     oninit (vnode) {
-        this.petitions = []
         this.title = vnode.attrs.title
         this.method = vnode.attrs.method
         this.route = vnode.attrs.route
         this.start = 0
         this.end = this.numberperpage
         m.request({
-            method: 'GET',
+            method: this.method,
             url: `${endpoint}${this.route}`
         })
             .then(
                 response => {
-                    this.petitions = response.items
-                    this.nbpages = parseInt(this.petitions.length/this.numberperpage)
+                    this.petitions = response.items.map(pet=>pet.properties)
+                    this.nbpages = parseInt((this.petitions.length / this.numberperpage)) + 1
                     this.petitionsSliced = this.petitions.slice(this.start, this.end)
-                    console.log("initialisation")
                 }
             )
     }
-    onupdate(){
-        this.petitionsSliced = this.petitions.slice(this.start,this.end)
-    }
-    view () {
+    view (vnode) {
         return m("div", [
             m("h4.mb-5", this.title),
             m("div", this.petitionsSliced.map(petition => {
-                return m(Petition, { data: petition.properties, display:'block'})
+                return m(Petition, { data: petition, display: 'block', maj: vnode.state})
             })),
-            m("nav[aria-label=...]",[
-                m("ul.pagination",[...Array(6).keys()].slice(1).map(nb=>{
-                    return m("li.page-item",m("a.page-link[href=#]",{
-                        onclick: ()=>{
-                            this.end = nb*this.numberperpage
+            m("nav[aria-label=...]", [
+                m("ul.pagination", [...Array(this.nbpages).keys()].slice(1).map(nb => {
+                    return m("li.page-item", m("a.page-link", {
+                        onclick: () => {
+                            this.end = nb * this.numberperpage
                             this.start = (this.end - this.numberperpage)
-                            this.petitionsSliced = this.petitions.slice(this.start,this.end)
+                            this.petitionsSliced = this.petitions.slice(this.start, this.end)
                         }
-                    },nb))
+                    }, nb))
                 }))
             ])
         ])
@@ -244,13 +243,84 @@ class MyPetition {
                 }
             )
     }
-    view () {
+    view (vnode) {
         return m("div", [
             m("h4.mb-5", this.title),
             m("div", this.petitions.map(petition => {
-                return m(Petition, { data: petition.properties, display:'none'})
+                return m(Petition, { data: petition.properties, display: 'none' })
             })),
         ])
     }
 
+}
+
+class PetitionListAll {
+    constructor(vnode) {
+        this.route = vnode.attrs.route
+        this.method = vnode.attrs.method
+        this.key = ""
+        this.petitions = []
+
+    }
+    oninit (vnode) {
+        this.title = vnode.attrs.title
+        m.request(
+            {
+                method: this.method,
+                url: `${endpoint}${this.route}`,
+                data: { lastKey: this.key }
+            }
+        )
+            .then(
+                response => {
+                    this.petitions = response.petitions.sort((a, b) => b.properties.total - a.properties.total).map(pet => pet.properties)
+                    this.key = this.petitions.slice(-1)[0].name
+                }
+            )
+    }
+    view (vnode) {
+        return m("div", [
+            m("h4.mb-5", this.title),
+            m("div.d-flex justify-content-end", [
+                m("button.btn btn-outline-success[type=button]", {
+                    onclick: () => {
+                        m.request({
+                            method: this.method,
+                            url: `${endpoint}${this.route}`,
+                            data: { lastKey: this.key, way: "next" }
+                        })
+                            .then(response => {
+                                this.petitions = response.petitions.sort((a, b) => b.properties.total - a.properties.total).map(pet => pet.properties)
+                                this.key = this.petitions.slice(-1)[0].name
+                            })
+
+
+                    }
+                }, "Suivant"),
+
+
+            ]),
+            m("div", this.petitions.map(petition => {
+                return m(Petition, { data: petition, display: 'block',maj: vnode.state})
+            })),
+            m("div.d-flex justify-content-start", [
+                m("button.btn btn-outline-success[type=button][href=#]", {
+                    onclick: () => {
+                        m.request({
+                            method: this.method,
+                            url: `${endpoint}${this.route}`,
+                            data: { lastKey: this.key, way: "next" }
+                        })
+                            .then(response => {
+                                this.petitions = response.petitions.sort((a, b) => b.properties.total - a.properties.total).map(pet => pet.properties)
+                                this.key = this.petitions.slice(-1)[0].name
+                            })
+
+
+                    }
+                }, "Suivant"),
+            ])
+
+        ])
+    }
 }

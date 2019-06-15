@@ -20,8 +20,8 @@ class Navbar {
                     ),
                     m("div.dropdown-menu[aria-labelledby=navbarDropdown]", [
                         m("a.dropdown-item[href=/add]", { oncreate: m.route.link }, "Ajouter"),
-                        m("a.dropdown-item[href=/myPetition]", { oncreate: m.route.link }, "mes pétitions")
-
+                        m("a.dropdown-item[href=/myPetition]", { oncreate: m.route.link }, "Mes pétitions"),
+                        m("a.dropdown-item[href=/top100]", { oncreate: m.route.link }, "TOP 100")
                     ])
                 ])
             ]),
