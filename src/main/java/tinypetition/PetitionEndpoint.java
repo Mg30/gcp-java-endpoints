@@ -5,10 +5,8 @@ import java.util.Map;
 
 import tinypetition.Payload;
 import tinypetition.Petition;
-import tinypetition.ResponseSign;
 import tinypetition.PaginatedPayload;
 
-import com.google.api.client.util.Throwables;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.UnauthorizedException;
@@ -27,7 +25,6 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Query.FilterOperator;
-import java.util.UUID;
 
 
 @Api(name = "petapi",
@@ -36,6 +33,9 @@ namespace = @ApiNamespace(ownerDomain = "helloworld.example.com",
     ownerName = "helloworld.example.com",
     packagePath = ""))
 public class PetitionEndpoint {
+	/*
+	 * Classe GAE qui contient les méthodes l'API pour les pétitions
+	 */
 	
 	@ApiMethod(name = "addPetition",
 			path="add",
@@ -45,17 +45,22 @@ public class PetitionEndpoint {
 			
 			)
 	public Entity addPetition(User user, Petition incomepetition)  throws UnauthorizedException{
+		/*
+		 * Methode qui permet d'ajouter une pétition
+		 * @param user object injecté par GAE
+		 * @param incomepetition un JSON envoyé par le client javascript représentant un objet petition
+		 * @return la pétiton qui vient d'être ajoutée
+		 */
 		  if (user == null) {
 		      throw new UnauthorizedException("Invalid credentials");
 		    }
-		String uuid = UUID.randomUUID().toString();
 		Entity petition = new Entity("Petition",incomepetition.name);
 		petition.setProperty("name", incomepetition.name);
 		petition.setProperty("owner",incomepetition.owner);
 		petition.setProperty("description", incomepetition.description);
 		petition.setProperty("total",1);
-		petition.setProperty("currentIndex", uuid);
-		Entity petitionIndex = new Entity("PetitionIndex",uuid,petition.getKey());
+		petition.setProperty("currentIndex", 1);
+		Entity petitionIndex = new Entity("PetitionIndex","index"+1,petition.getKey());
 		ArrayList<String> signataires = new ArrayList<String>();
 		signataires.add(incomepetition.owner);
 		petitionIndex.setProperty("signataires", signataires);
@@ -71,7 +76,15 @@ public class PetitionEndpoint {
 			audiences = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}, //ICI
 			clientIds = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}
 			)
-	public Entity getPetition(Petition inPetition) throws EntityNotFoundException {
+	public Entity getPetition(User user, Petition inPetition) throws EntityNotFoundException, UnauthorizedException{
+		/*
+		 * Methode qui permet de retrieve une pétition 
+		 * @param inPetition un JSON envoyé par le client javascript représentant un objet petition
+		 * @param user object injecté par GAE
+		 */
+		  if (user == null) {
+		      throw new UnauthorizedException("Invalid credentials");
+		    }
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Key petitionKey = KeyFactory.createKey("Petition", inPetition.name);
 		Entity outPetition = datastore.get(petitionKey);
@@ -82,7 +95,16 @@ public class PetitionEndpoint {
 			path="sign",
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
-	public Entity signPetition(Payload payload) throws EntityNotFoundException, UnauthorizedException {
+	public Entity signPetition(User user, Payload payload) throws EntityNotFoundException, UnauthorizedException {
+		/*
+		 * Methode qui permet de signer une pétition
+		 * @param user object injecté par GAE
+		 * @param payload un JSON envoyé par le client javascript représentant un objet payload
+		 * @return la petition qui vient d'être signée
+		 */
+		  if (user == null) {
+		      throw new UnauthorizedException("Invalid credentials");
+		    }
 		Entity petition;
 		Key petitionKey = KeyFactory.createKey("Petition", payload.petitionName);
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -96,14 +118,15 @@ public class PetitionEndpoint {
 				long total = (long)petition.getProperty("total");
 				total ++;
 				petition.setProperty("total", total);
-				String currentIndex = (String)petition.getProperty("currentIndex");
+				int currentIndex = (int)petition.getProperty("currentIndex");
+				
 				Key petitionIndexKey = KeyFactory.createKey(petitionKey,"PetitionIndex", currentIndex);
 				Entity petitionIndex = datastore.get(petitionIndexKey);
 				long nb = (long)petitionIndex.getProperty("nb");
 				if(nb==20000) {
-					String uuid = UUID.randomUUID().toString();
-					petition.setProperty("currentIndex", uuid);
-					petitionIndex = new Entity("PetitionIndex",uuid,petition.getKey());
+					int newIndex = currentIndex + 1;
+					petition.setProperty("currentIndex", newIndex);
+					petitionIndex = new Entity("PetitionIndex","index"+newIndex,petition.getKey());
 					ArrayList<String> signataires = new ArrayList<String>();
 					signataires.add(payload.userName);
 					petitionIndex.setProperty("nb",1);
@@ -138,6 +161,12 @@ public class PetitionEndpoint {
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
 	public List<Entity> getListByUserName(Payload payload){
+		/*
+		 * Methode qui permet de retrieve la liste des petitions d'un user
+		 * @param payload un JSON envoyé par le client javascript représentant un objet payload
+		 * @return liste de pétitions
+		 */
+		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Filter propertyFilter = new FilterPredicate("signataires", FilterOperator.EQUAL, payload.userName);
 		Query q = new Query("PetitionIndex").setFilter(propertyFilter);
@@ -161,6 +190,11 @@ public class PetitionEndpoint {
 			httpMethod = ApiMethod.HttpMethod.GET
 			)
 	public List<Entity> getTop100(){
+		/*
+		 * Methode qui permet de retrieve le top 100 des pétitions
+		 * @return la list des 100 petitions triées par total de signatures
+		 */
+		
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Query q = new Query("Petition").addSort("total", SortDirection.DESCENDING);
 		List<Entity> results = datastore.prepare(q).asList(FetchOptions.Builder.withLimit(100));
@@ -173,6 +207,12 @@ public class PetitionEndpoint {
 			)
 	
 	public PaginatedPayload allPetition(PaginatedPayload params){
+		/*
+		 * Methode qui permet de retrieve la liste des petitions d'un user
+		 * @param params un JSON envoyé par le client javascript représentant un objet PaginatedPayload
+		 * utilisé pour savoir qu'elle est la dernière clef pour le filtre
+		 * @return un objet params qui contient la lsite des pétitions et la dernière clef
+		 */
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Query q;
 		if(params.lastKey.length() == 0) {
