@@ -76,15 +76,12 @@ public class PetitionEndpoint {
 			audiences = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}, //ICI
 			clientIds = {"291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com"}
 			)
-	public Entity getPetition(User user, Petition inPetition) throws EntityNotFoundException, UnauthorizedException{
+	public Entity getPetition( Petition inPetition) throws EntityNotFoundException, UnauthorizedException{
 		/*
 		 * Methode qui permet de retrieve une pétition 
 		 * @param inPetition un JSON envoyé par le client javascript représentant un objet petition
 		 * @param user object injecté par GAE
 		 */
-		  if (user == null) {
-		      throw new UnauthorizedException("Invalid credentials");
-		    }
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 		Key petitionKey = KeyFactory.createKey("Petition", inPetition.name);
 		Entity outPetition = datastore.get(petitionKey);
@@ -95,16 +92,13 @@ public class PetitionEndpoint {
 			path="sign",
 			httpMethod = ApiMethod.HttpMethod.POST
 			)
-	public Entity signPetition(User user, Payload payload) throws EntityNotFoundException, UnauthorizedException {
+	public Entity signPetition(Payload payload) throws EntityNotFoundException, UnauthorizedException {
 		/*
 		 * Methode qui permet de signer une pétition
 		 * @param user object injecté par GAE
 		 * @param payload un JSON envoyé par le client javascript représentant un objet payload
 		 * @return la petition qui vient d'être signée
 		 */
-		  if (user == null) {
-		      throw new UnauthorizedException("Invalid credentials");
-		    }
 		Entity petition;
 		Key petitionKey = KeyFactory.createKey("Petition", payload.petitionName);
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -118,13 +112,12 @@ public class PetitionEndpoint {
 				long total = (long)petition.getProperty("total");
 				total ++;
 				petition.setProperty("total", total);
-				int currentIndex = (int)petition.getProperty("currentIndex");
-				
-				Key petitionIndexKey = KeyFactory.createKey(petitionKey,"PetitionIndex", currentIndex);
+				long currentIndex = (long)petition.getProperty("currentIndex");
+				Key petitionIndexKey = KeyFactory.createKey(petitionKey,"PetitionIndex", "index"+currentIndex);
 				Entity petitionIndex = datastore.get(petitionIndexKey);
 				long nb = (long)petitionIndex.getProperty("nb");
 				if(nb==20000) {
-					int newIndex = currentIndex + 1;
+					long newIndex = currentIndex + 1;
 					petition.setProperty("currentIndex", newIndex);
 					petitionIndex = new Entity("PetitionIndex","index"+newIndex,petition.getKey());
 					ArrayList<String> signataires = new ArrayList<String>();
