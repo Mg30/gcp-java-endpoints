@@ -1,9 +1,11 @@
 # Projet de cloud developpement GAE
 
-## application déployée ici : tinypetition-dot-devcloud.appspot.com
+application déployée ici : https://tinypetition-dot-devcloud.appspot.com
 
 
+### Petition Entity
 ![Petition](Petition.PNG)
 
+### PetitionIndex Entity
 ![PetitionIndex](PetitionIndex.PNG)
 
