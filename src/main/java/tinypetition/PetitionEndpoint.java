@@ -207,17 +207,11 @@ public class PetitionEndpoint {
 		 * @return un objet params qui contient la lsite des pétitions et la dernière clef
 		 */
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-		Query q;
-		if(params.lastKey.length() == 0) {
-			q = new Query("Petition");
-			
-		}
-		else {
+		Query q = new Query("Petition");
+		if(params.lastKey != null) {
 			Key petitionKey = KeyFactory.createKey("Petition", params.lastKey);
 			Filter keyFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, FilterOperator.GREATER_THAN, petitionKey);
-				
-			q = new Query("Petition").setFilter(keyFilter);
-	
+			q.setFilter(keyFilter);
 		}
 		params.petitions = datastore.prepare(q).asList(FetchOptions.Builder.withLimit(10));
 		return params;

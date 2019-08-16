@@ -1,95 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang=en><head><script>var gapi = gapi || {};
 
-<head>
-    <script>
-        var gapi = gapi || {};
+    /* eslint-disable no-unused-vars */
 
-        /* eslint-disable no-unused-vars */
+    // [START load_auth2_library]
+    function loadAuthClient() {
+      gapi.load('auth2', initGoogleAuth);
+    }
+    // [END load_auth2_library]
 
-        // [START load_auth2_library]
-        function loadAuthClient() {
-            gapi.load('auth2', initGoogleAuth);
-        }
-        // [END load_auth2_library]
-
-        // [START init_google_auth]
-        function initGoogleAuth(clientId = '291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com') {
-            gapi.auth2.init({
-                client_id: clientId,
-            })
-                .then()
-                .catch(err => {
-                    console.log(err);
-                });
-        }
-
-    </script>
-    <script src="https://apis.google.com/js/platform.js?onload=loadAuthClient" async defer></script>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>TinyPet</title>
-</head>
-
-<body>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-        crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-        crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/mithril/mithril.js"></script>
-    <script src="/javascript/Layout.js"></script>
-    <script src="/javascript/Components.js"></script>
-    <script src="/javascript/Petition.js"></script>
-    <script>
-        // GLOBAL SCOPE VARIABLE 
-        var endpoint = "https://tinypetition-dot-devcloud.appspot.com/_ah/api/petapi/v1/"
-
-        m.route(document.body, "/home", {
-            "/home": {
-                render: () => {
-                    return m('div', [
-                        m(Navbar),
-                        m(PetitionListAll,{route:"all/", title: "WELCOME TO TINYPET' ",method:"POST"})
-                    ])
-                }
-            },
-            "/top100":{
-                view:()=>{
-                    return m('div', [
-                        m(Navbar),
-                        m(PetitionList,{route:"top100", title: "TOP 100 DES PETITIONS ",method:"GET"})
-                    ])
-
-                }
-
-            },
-            "/add": {
-                view: () => {
-                    return m('div', [
-                        m(Navbar),
-                        m(PetitionForm),
-                    ])
-                }
-            },
-            "/myPetition":{
-                view:()=>{
-                    return m("div",[
-                    m(Navbar),
-                    m(MyPetition,{route:"ListByUserName/",method:"POST",title:"MES PETITIONS"})
-                    ])
-                }
-            }
-        })
-    </script>
-
-</body>
-
-</html>
+    // [START init_google_auth]
+    function initGoogleAuth(clientId = '291345575082-jlkqvkonrhife55l1al4o3af2vb9jvrs.apps.googleusercontent.com') {
+      gapi.auth2.init({
+        client_id: clientId,
+      })
+        .then()
+        .catch(err => {
+          console.log(err);
+        });
+    }</script><script src="https://apis.google.com/js/platform.js?onload=loadAuthClient" async defer></script><meta charset=UTF-8><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=icon href=/favicon.ico><title>tinypet</title><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"><link href=https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css><link href=/css/chunk-vendors.0a6aa49e.css rel=preload as=style><link href=/js/app.b767aafc.js rel=preload as=script><link href=/js/chunk-vendors.738775dd.js rel=preload as=script><link href=/css/chunk-vendors.0a6aa49e.css rel=stylesheet></head><body><noscript><strong>We're sorry but tinypet doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id=app></div><script src=/js/chunk-vendors.738775dd.js></script><script src=/js/app.b767aafc.js></script></body><script src=https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.5.4/randomColor.min.js></script></html>
