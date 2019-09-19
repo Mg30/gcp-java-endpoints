@@ -1,4 +1,4 @@
-# GAE apps using JAVA endpoints framework/Vue.js
+# GAE app using JAVA endpoints framework/Vue.js
 
 
 ![PetitionIndex](Capture.PNG)
