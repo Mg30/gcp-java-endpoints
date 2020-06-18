@@ -6,7 +6,5 @@
 
 
 
-## Test the app
-
-app currently deployed here : https://tinypetition-dot-devcloud.appspot.com
-
+## Nb:
+As using free tiers, there is a cold start meaning the data might take a little bit of time to load
